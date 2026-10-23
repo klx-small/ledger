@@ -220,7 +220,7 @@
             <span style="font-size:11px;background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:999px;flex-shrink:0">一行一人 · 自动拆进档案</span>
           </div>
           <p style="font-size:13px;color:var(--dim);margin:6px 0 0;line-height:1.7">把一句话写全，姓名、电话、性别年龄、到面时间、面试地点、试岗结论都自动拆好，不用再逐格填表：</p>
-          <div class="quick-eg">新增 张三 男 28岁 13800138000 约面明天上午10点 地点新都园区1号门<br />更新 李四 试岗没过 仓库判定 手速太慢<br />更新 王五 试岗没过 自己提前走 太累干不动<br />更新 赵六 试岗通过 再考虑 工资想再谈谈<br />更新 钱七 试岗通过 立即入职<br />新增 刘九 男 30岁 13700002222 入职 10月15日（补录以前入职的人：写真实入职日期，就不会算进今天）<br />流失 孙八 嫌夜班</div>
+          <div class="quick-eg">新增 张三 男 28岁 13800138000 约面明天上午10点 地点新都园区1号门<br />更新 李四 试岗没过 仓库判定 手速太慢<br />更新 王五 试岗没过 自己提前走 太累干不动<br />更新 赵六 试岗通过 再考虑 工资想再谈谈<br />更新 钱七 试岗通过 立即入职<br />新增 刘九 男 30岁 13700002222 入职 10月15日（补录以前入职的人：写真实入职日期，就不会算进今天）<br />新增 周十 叉车司机 13900003333 入职 9月11日（岗位写上名字就行；叉车司机工种自动记正式工，其他岗位没写工种默认临时工）<br />更新 兰初 2次入职 10月10日（同一个人第二次入职：写清第几次，单独一份档案，不覆盖第一次）<br />流失 孙八 嫌夜班</div>
           <label class="sr-only" for="quick-input">批量速记输入</label>
           <textarea class="quick-ta" id="quick-input" rows="4" placeholder="在这里粘贴或输入，一行一人…&#10;例如：新增 周九 女 26岁 13900001111 约面后天下午2点 地点新都园区1号门&#10;补录以前入职的人：新增 刘九 13700002222 入职 10月15日"></textarea>
           <button class="btn-primary" id="quick-btn" style="margin-top:10px">一键入库并更新看板</button>
@@ -230,7 +230,7 @@
         <div class="toolbar">
           <div style="flex:1;min-width:0">
             <label class="sr-only" for="search-input">搜索候选人</label>
-            <input class="search-inp" id="search-input" placeholder="搜索姓名 / 电话 / 备注 / 面试地点 / 试岗原因" />
+            <input class="search-inp" id="search-input" placeholder="搜索姓名 / 电话 / 备注 / 面试地点 / 岗位 / 试岗原因" />
           </div>
           <button class="tool-btn" id="export-btn">⬇ 导出表格</button>
           <button class="tool-btn" id="import-btn">⬆ 导入表格</button>
@@ -244,7 +244,7 @@
 
         <section id="list" aria-label="候选人名单" style="margin-top:12px"></section>
 
-        <p style="text-align:center;font-size:12px;color:var(--dim);margin-top:24px;line-height:1.8">整理口径：约面记全档案（姓名/联系方式/性别年龄/到面日期/时间段/面试地点）；试岗只记结论——通过看入职意向，没过分清是本人走还是仓库判定、具体卡在哪。<br />看板为累计口径，今日与近7天按 Asia/Shanghai 统计；入职按档案里的入职日期归天——补录以前入职的人填真实日期，就不会算进今天。「导出表格」下载的是全部台账 CSV（含入职日期列），Excel 可直接打开。数据只保存在这台设备的浏览器里，换设备请用「导出表格 / 导入表格」搬家，并留一份导出文件做备份。</p>
+        <p style="text-align:center;font-size:12px;color:var(--dim);margin-top:24px;line-height:1.8">整理口径：约面记全档案（姓名/联系方式/性别年龄/到面日期/时间段/面试地点/岗位/工种）；试岗只记结论——通过看入职意向，没过分清是本人走还是仓库判定、具体卡在哪。工种没标注默认临时工，叉车司机默认正式工；二次入职单独一份档案、标「第几次入职」，姓名保持干净。<br />看板为累计口径，今日与近7天按 Asia/Shanghai 统计；入职按档案里的入职日期归天——补录以前入职的人填真实日期，就不会算进今天。「导出表格」下载的是全部台账 CSV（21 列，含岗位类型/工种/入职次数/入职日期），Excel 可直接打开。数据只保存在这台设备的浏览器里，换设备请用「导出表格 / 导入表格」搬家，并留一份导出文件做备份。</p>
       </main>
     </div>
 
@@ -279,6 +279,9 @@ var LOST_REASONS = ["嫌夜班", "嫌远", "嫌工资", "没来面", "联系不�
 var SELF_LEFT_DETAILS = ["太累干不动", "觉得活不合适", "工资不满意", "受不了夜班", "路太远", "家里有事", "身体吃不消"];
 var WAREHOUSE_DETAILS = ["手速太慢", "分拣老出错", "体力跟不上", "不听安排", "迟到早退", "干活不认真", "年龄偏大"];
 var HIRE_CONCERNS = ["工资想再谈谈", "夜班要考虑", "跟家里商量", "住得远没想好", "宿舍问题", "再看看别家"];
+/* 岗位类型（按平台截图整理）；工种没标注默认临时工，叉车司机默认正式工 */
+var JOB_TYPES = ["拣货员", "打包员", "分拣员", "上架员", "收货员", "理货员", "装卸员", "卸车员", "叉车司机"];
+var WORK_TYPES = ["临时工", "正式工", "临转正"];
 var WEEK = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
 var DAY_MS = 86400000;
 
@@ -399,6 +402,7 @@ var DB = { nextId: 1, candidates: [], events: [] };
 function blankCandidate() {
   return {
     id: 0, name: "", phone: "", gender: "", age: null, stage: "greeted",
+    jobType: "", workType: "临时工", hireCount: 1,
     lostReason: "", interviewAt: "", interviewDate: "", interviewSlot: "", interviewLocation: "",
     trialResult: "", trialFailType: "", trialFailDetail: "", hireIntent: "", hireConcern: "", hireDate: "",
     note: "", createdAt: 0, updatedAt: 0
@@ -423,6 +427,63 @@ function loadDB() {
 function saveDB() {
   lsSet(LS_DATA, JSON.stringify(DB));
   if (!storageOK) document.getElementById("storage-warn").style.display = "block";
+}
+/* 老数据迁移：早期二次入职/转正靠在姓名后加标注区分（如「兰初（2次入职）」「陈艾均（转正）」），
+   标注还原成入职次数/工种字段，姓名保持干净；同时给老档案补齐岗位/工种/入职次数默认值 */
+function cleanNameMarks(c) {
+  var changed = false;
+  var name = c.name || "";
+  var re = /[（(]([^（）()]*)[）)]\s*$/;
+  var m;
+  while ((m = name.match(re))) {
+    var inner = m[1].trim();
+    var cnt = inner.match(/^(\d+)\s*次入职$/);
+    if (cnt) c.hireCount = Number(cnt[1]);
+    else if (inner === "二次入职" || inner === "第二次入职") c.hireCount = 2;
+    else if (inner === "转正" || inner === "临转正") c.workType = "临转正";
+    else break;
+    name = name.slice(0, m.index).trim();
+    changed = true;
+  }
+  if (name && name !== c.name) c.name = name;
+  return changed;
+}
+function migrateLedger() {
+  var changed = false;
+  DB.candidates.forEach(function (c) {
+    if (cleanNameMarks(c)) changed = true;
+    if (typeof c.jobType !== "string" || JOB_TYPES.indexOf(c.jobType) < 0) {
+      if (c.jobType !== "") changed = true;
+      c.jobType = JOB_TYPES.indexOf(c.jobType) >= 0 ? c.jobType : "";
+    }
+    if (WORK_TYPES.indexOf(c.workType) < 0) {
+      c.workType = c.jobType === "叉车司机" ? "正式工" : "临时工";
+      changed = true;
+    }
+    if (!(Number(c.hireCount) >= 1)) { c.hireCount = 1; changed = true; }
+  });
+  // 同名同电话的多份老档案若次数撞在一起（都记成首次，多半是早期靠改名硬拆、后缀没带次数的，
+  // 如陈艾均两条都没后缀或只有一条带「（转正）」）：按入职日期先后补成第 1、2…次，
+  // 否则导入带入职次数的表格时分不清哪份是哪份，会串档
+  var groups = {};
+  DB.candidates.forEach(function (c) {
+    var k = c.name + "\u0001" + (c.phone || "");
+    (groups[k] = groups[k] || []).push(c);
+  });
+  Object.keys(groups).forEach(function (k) {
+    var g = groups[k];
+    if (g.length < 2) return;
+    var seen = {}, dup = false;
+    g.forEach(function (c) { if (seen[c.hireCount]) dup = true; seen[c.hireCount] = true; });
+    if (!dup) return;
+    g.slice().sort(function (a, b) {
+      var ka = a.hireDate || "9999", kb = b.hireDate || "9999";
+      return ka < kb ? -1 : ka > kb ? 1 : (a.createdAt || 0) - (b.createdAt || 0);
+    }).forEach(function (c, i) {
+      if (c.hireCount !== i + 1) { c.hireCount = i + 1; changed = true; }
+    });
+  });
+  if (changed) saveDB();
 }
 function findCand(id) {
   for (var i = 0; i < DB.candidates.length; i++) if (DB.candidates[i].id === id) return DB.candidates[i];
@@ -635,6 +696,26 @@ function parseQuickLine(line) {
     }
   }
 
+  // 岗位类型：截图里的岗位名（可带「岗」字，如「拣货员岗」「叉车司机岗」）；先查长的避免误命中
+  var jobType = "";
+  var jobByLen = JOB_TYPES.slice().sort(function (a, b) { return b.length - a.length; });
+  for (var jt = 0; jt < jobByLen.length; jt++) { if (raw.indexOf(jobByLen[jt]) >= 0) { jobType = jobByLen[jt]; break; } }
+  if (!jobType && raw.indexOf("叉车") >= 0) jobType = "叉车司机";
+
+  // 工种：写了才算数；「临转正」优先于「转正」，单独写「转正」也记临转正
+  var workType = "";
+  if (raw.indexOf("临转正") >= 0) workType = "临转正";
+  else if (raw.indexOf("正式工") >= 0) workType = "正式工";
+  else if (raw.indexOf("临时工") >= 0) workType = "临时工";
+  else if (raw.indexOf("转正") >= 0) workType = "临转正";
+
+  // 入职次数：「2次入职」「二次入职」「第2次」都算第 2 次，「首次入职」「第一次」算第 1 次；没写为 null（建档默认首次，更新不改）
+  var hireCount = null;
+  var hcMatch = raw.match(/(\d+)\s*次入职/) || raw.match(/第\s*(\d+)\s*次/);
+  if (hcMatch) hireCount = Number(hcMatch[1]);
+  else if (raw.indexOf("二次入职") >= 0 || raw.indexOf("第二次入职") >= 0) hireCount = 2;
+  else if (raw.indexOf("首次入职") >= 0 || raw.indexOf("第一次入职") >= 0 || raw.indexOf("第一次") >= 0) hireCount = 1;
+
   var phoneMatch = raw.match(/1\d{10}/);
   var phone = phoneMatch ? phoneMatch[0] : "";
 
@@ -748,15 +829,19 @@ function parseQuickLine(line) {
     if (["新增", "更新", "流失"].indexOf(name) >= 0) name = tokens[1] || "";
     action = "update";
   }
+  // 姓名里夹带的标注（如「兰初（2次入职）」「陈艾均（转正）」）不属于姓名本身：
+  // 标注已在上面拆成入职次数/工种字段，这里把姓名还原干净，避免导出时姓名带括号后缀
+  name = name.replace(/[（(][^（）()]*[）)]/g, "").trim();
   var allStages = candStages.length
     ? Array.from(new Set(candStages)).sort(function (a, b) { return (STAGE_ORDER[a] || 0) - (STAGE_ORDER[b] || 0); })
     : [stage];
   var base = {
-    action: action, name: name, stage: stage, allStages: allStages, lostReason: lostReason,
+    action: action, name: name, stage: stage, allStages: allStages, hasStage: candStages.length > 0, lostReason: lostReason,
     interviewAt: interviewAt, interviewDate: interviewDate, interviewSlot: interviewSlot, interviewLocation: interviewLocation,
     phone: phone, gender: gender, age: age,
     trialResult: trialResult, trialFailType: trialFailType, trialFailDetail: trialFailDetail,
-    hireIntent: hireIntent, hireConcern: hireConcern, hireDate: hireDate, raw: raw
+    hireIntent: hireIntent, hireConcern: hireConcern, hireDate: hireDate,
+    jobType: jobType, workType: workType, hireCount: hireCount, raw: raw
   };
   if (!name || name.length > 10) { base.action = "unknown"; base.name = ""; return base; }
   if (stage === "lost" && action !== "create") base.action = "lost";
@@ -775,19 +860,28 @@ function quickImport(text) {
       results.push({ line: line, status: "failed", message: "没认出姓名，格式：新增 姓名 电话 约面时间" }); failed++; return;
     }
     var matches = byName(p.name);
+    // 入职次数消歧：这行明确写了第几次入职时，只在同次数的档案里找人。
+    // 写「2次入职」而台账里只有首次那份档案 → 是二次入职，往下走单独建档，
+    // 不再靠改名（姓名后加括号）硬凑，也不会把首次入职的档案覆盖掉
+    var scoped = p.hireCount !== null ? matches.filter(function (c) { return (c.hireCount || 1) === p.hireCount; }) : matches;
     var existing = null, conflictMsg = "";
     if (p.phone) {
-      existing = matches.filter(function (c) { return c.phone === p.phone; })[0] || null;
-      if (!existing && matches.length === 1 && !matches[0].phone) existing = matches[0];
-      if (!existing && matches.length > 0 && p.action !== "create") {
-        conflictMsg = matches.length > 1
-          ? "台账里有 " + matches.length + " 个叫" + p.name + "的，电话都和这一行对不上，为防记错人这行没动；请核对电话后重试"
+      var phoneMatches = scoped.filter(function (c) { return c.phone === p.phone; });
+      if (phoneMatches.length === 1) existing = phoneMatches[0];
+      else if (phoneMatches.length > 1 && p.action !== "create") {
+        // 同名同电话有多份档案 = 多次入职的同一个人，这行没写第几次，分不清是哪一份，不猜
+        conflictMsg = p.name + "有 " + phoneMatches.length + " 份档案（多次入职），这行没写第几次入职分不清是哪一份，没动；请在行里写上「首次入职」或「2次入职」再记";
+      }
+      if (!existing && !conflictMsg && scoped.length === 1 && !scoped[0].phone) existing = scoped[0];
+      if (!existing && !conflictMsg && scoped.length > 0 && p.action !== "create") {
+        conflictMsg = scoped.length > 1
+          ? "台账里有 " + scoped.length + " 个叫" + p.name + "的，电话都和这一行对不上，为防记错人这行没动；请核对电话后重试"
           : "台账里" + p.name + "的电话和这一行对不上，为防记错人这行没动；如果是另一个人，请用「新增 " + p.name + " 电话 …」单独建档";
       }
-    } else if (matches.length === 1) {
-      existing = matches[0];
-    } else if (matches.length > 1 && p.action !== "create") {
-      conflictMsg = "台账里有 " + matches.length + " 个叫" + p.name + "的，这行没带电话分不清是谁，没动；请带上电话再记这一行";
+    } else if (scoped.length === 1) {
+      existing = scoped[0];
+    } else if (scoped.length > 1 && p.action !== "create") {
+      conflictMsg = "台账里有 " + scoped.length + " 个叫" + p.name + "的，这行没带电话分不清是谁，没动；请带上电话再记这一行";
     }
     if (conflictMsg) { results.push({ line: line, status: "failed", message: conflictMsg }); failed++; return; }
 
@@ -804,6 +898,11 @@ function quickImport(text) {
       if (p.trialResult === "failed") { fields.trialFailType = p.trialFailType; fields.trialFailDetail = p.trialFailDetail; }
       if (p.trialResult === "passed") { fields.hireIntent = p.hireIntent; if (p.hireIntent === "considering") fields.hireConcern = p.hireConcern; }
     }
+    // 岗位 / 工种 / 入职次数：写了才改；只写了岗位叉车司机、没写工种时，工种按默认记正式工
+    if (p.jobType) fields.jobType = p.jobType;
+    if (p.workType) fields.workType = p.workType;
+    else if (p.jobType === "叉车司机") fields.workType = "正式工";
+    if (p.hireCount !== null) fields.hireCount = p.hireCount;
     // 入职日期：这行记到入职时才处理。明确写了日期就用它（补录按真实日期归属统计）；
     // 没写日期则已有档案保留原日期、新档案按今天
     var involvesHired = p.stage === "hired" || p.allStages.indexOf("hired") >= 0;
@@ -821,6 +920,10 @@ function quickImport(text) {
     if (p.trialResult === "failed") bits.push("试岗没过" + (p.trialFailType === "self_left" ? "（本人提前走" : p.trialFailType === "warehouse_reject" ? "（仓库判定" : "") + (p.trialFailDetail ? "：" + p.trialFailDetail : "") + (p.trialFailType ? "）" : ""));
     if (p.trialResult === "passed") bits.push(p.hireIntent === "immediate" ? "试岗通过·立即入职" : p.hireIntent === "considering" ? "试岗通过·再考虑" + (p.hireConcern ? "（" + p.hireConcern + "）" : "") : "试岗通过");
     if (involvesHired && p.hireDate) bits.push("入职日期 " + p.hireDate + "（按这天统计，不算今天）");
+    if (p.jobType) bits.push("岗位 " + p.jobType);
+    if (p.workType) bits.push("工种 " + p.workType);
+    else if (p.jobType === "叉车司机") bits.push("工种 正式工（叉车司机默认）");
+    if (p.hireCount !== null && p.hireCount > 1) bits.push("第" + p.hireCount + "次入职");
     var summary = bits.length ? "｜" + bits.join("｜") : "";
 
     // 补录建档：写明入职日期的整行阶段事件都钉在那天，不把历史数据算进今天
@@ -846,13 +949,19 @@ function quickImport(text) {
         }
         if (oldDay) moveEventsOnDay(existing.id, oldDay, hireTs);
       }
-      existing.stage = p.stage;
+      // 这行没写任何阶段（只改岗位/工种/电话等档案信息）时不动阶段：
+      // 保持原阶段、不记阶段事件、不清流失原因，免得一句「更新 X 临转正」把人打回待约面
+      if (p.hasStage) {
+        existing.stage = p.stage;
+        if (p.lostReason) existing.lostReason = p.lostReason;
+        else if (p.stage !== "lost") existing.lostReason = "";
+      }
       Object.keys(fields).forEach(function (k) { existing[k] = fields[k]; });
-      if (p.lostReason) existing.lostReason = p.lostReason;
-      else if (p.stage !== "lost") existing.lostReason = "";
       touch(existing);
-      p.allStages.forEach(function (s) { addEvent(existing.id, s, evAt); });
-      results.push({ line: line, status: "updated", message: "已更新到：" + (STAGE_LABEL[p.stage] || p.stage) + (p.lostReason ? "（" + p.lostReason + "）" : "") + summary }); updated++;
+      if (p.hasStage) p.allStages.forEach(function (s) { addEvent(existing.id, s, evAt); });
+      results.push({ line: line, status: "updated", message: p.hasStage
+        ? "已更新到：" + (STAGE_LABEL[p.stage] || p.stage) + (p.lostReason ? "（" + p.lostReason + "）" : "") + summary
+        : "已更新档案" + summary }); updated++;
     } else {
       var ac = blankCandidate();
       ac.id = DB.nextId++; ac.name = p.name; ac.stage = p.stage; ac.lostReason = p.lostReason;
@@ -872,6 +981,10 @@ function createCandidate(data) {
   var c = blankCandidate();
   c.id = DB.nextId++;
   Object.keys(data).forEach(function (k) { if (data[k] !== undefined) c[k] = data[k]; });
+  // 岗位/工种/入职次数兜底：工种没标注默认临时工，叉车司机默认正式工
+  if (JOB_TYPES.indexOf(c.jobType) < 0) c.jobType = "";
+  if (WORK_TYPES.indexOf(c.workType) < 0) c.workType = c.jobType === "叉车司机" ? "正式工" : "临时工";
+  if (!(Number(c.hireCount) >= 1)) c.hireCount = 1;
   // 补录已入职：阶段直接记入职时，入职日期缺省按今天；填了历史日期就按那天归属统计
   if (c.stage === "hired" && !c.hireDate) c.hireDate = todayShanghaiKey();
   c.createdAt = c.updatedAt = Date.now();
@@ -972,14 +1085,15 @@ function filteredCandidates() {
     rows = rows.filter(function (c) {
       return c.name.toLowerCase().indexOf(s) >= 0 || (c.phone || "").indexOf(s) >= 0
         || (c.note || "").toLowerCase().indexOf(s) >= 0 || (c.trialFailDetail || "").toLowerCase().indexOf(s) >= 0
-        || (c.hireConcern || "").toLowerCase().indexOf(s) >= 0 || (c.interviewLocation || "").toLowerCase().indexOf(s) >= 0;
+        || (c.hireConcern || "").toLowerCase().indexOf(s) >= 0 || (c.interviewLocation || "").toLowerCase().indexOf(s) >= 0
+        || (c.jobType || "").toLowerCase().indexOf(s) >= 0 || (c.workType || "").toLowerCase().indexOf(s) >= 0;
     });
   }
   return rows;
 }
 
-/* ---------------- 导出 / 导入表格（18 列，与台账版导出格式一致，含入职日期） ---------------- */
-var CSV_HEADER = ["姓名", "联系方式", "性别", "年龄", "当前阶段", "入职日期", "到面日期", "到面时间段", "面试地点", "试岗结果", "试岗没过归因", "试岗没过具体问题", "入职意向", "入职顾虑", "流失原因", "备注", "录入时间", "更新时间"];
+/* ---------------- 导出 / 导入表格（21 列，与台账版导出格式一致，含岗位类型/工种/入职次数/入职日期） ---------------- */
+var CSV_HEADER = ["姓名", "联系方式", "性别", "年龄", "岗位类型", "工种", "入职次数", "当前阶段", "入职日期", "到面日期", "到面时间段", "面试地点", "试岗结果", "试岗没过归因", "试岗没过具体问题", "入职意向", "入职顾虑", "流失原因", "备注", "录入时间", "更新时间"];
 function downloadCsv() {
   var rows = sortedCandidates();
   if (!rows.length) { toast("台账是空的，还没有可导出的数据"); return; }
@@ -987,6 +1101,7 @@ function downloadCsv() {
   var lines = rows.map(function (c) {
     return [
       c.name, c.phone, c.gender, c.age == null ? "" : c.age,
+      c.jobType || "", c.workType || "临时工", (!c.hireCount || c.hireCount <= 1) ? "首次入职" : c.hireCount + "次入职",
       (c.stage === "greeted" || c.stage === "wechat") ? "待约面" : (stageMap[c.stage] ? stageMap[c.stage].label : c.stage),
       c.hireDate || "",
       csvInterviewDate(c.interviewDate), c.interviewSlot, c.interviewLocation,
@@ -1036,7 +1151,9 @@ function parseCsvTime(s) {
   if (!m) return Date.now();
   return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), Number(m[4] || 0), Number(m[5] || 0)).getTime();
 }
-/* 导入：按姓名+电话匹配已有的人（更新），对不上的新建；同名多人且电话对不上则跳过并报告 */
+/* 导入：按姓名+电话+入职次数匹配已有的人（更新），对不上的新建；同名多人且电话对不上则跳过并报告。
+   旧格式（17/18 列，没有岗位/工种/入职次数列）也能导：那三项不覆盖已有档案，新建的走默认。
+   早期导出的表姓名后可能带标注（（2次入职）/（转正）），导入时拆成入职次数/工种，姓名还原干净。 */
 function importCsv(text) {
   var rows = parseCsv(text);
   if (rows.length < 2) return { ok: false, message: "这个文件里没有数据行" };
@@ -1054,10 +1171,35 @@ function importCsv(text) {
     var r = rows[ri];
     var name = cell(r, "姓名");
     if (!name) { skipped++; continue; }
+    // 姓名后的标注拆成字段：如「兰初（2次入职）」→ 入职次数 2、「陈艾均（转正）」→ 工种 临转正
+    var nameHint = { hireCount: null, workType: "" };
+    var nm;
+    while ((nm = name.match(/[（(]([^（）()]*)[）)]\s*$/))) {
+      var inner = nm[1].trim();
+      var cntM = inner.match(/^(\d+)\s*次入职$/);
+      if (cntM) nameHint.hireCount = Number(cntM[1]);
+      else if (inner === "二次入职" || inner === "第二次入职") nameHint.hireCount = 2;
+      else if (inner === "转正" || inner === "临转正") nameHint.workType = "临转正";
+      else break;
+      name = name.slice(0, nm.index).trim();
+    }
+    if (!name) { skipped++; continue; }
     var phone = cell(r, "联系方式");
     var stage = stageByLabel[cell(r, "当前阶段")] || "greeted";
     var createdAt = parseCsvTime(cell(r, "录入时间"));
     var updatedAt = parseCsvTime(cell(r, "更新时间")) || createdAt;
+    // 岗位/工种/入职次数：文件里有这三列（或姓名标注能拆出来）才处理，旧文件不覆盖已有值
+    var hasJobCols = idx["岗位类型"] >= 0 || idx["工种"] >= 0 || idx["入职次数"] >= 0 || nameHint.hireCount !== null || !!nameHint.workType;
+    var jobTypeIn = JOB_TYPES.indexOf(cell(r, "岗位类型")) >= 0 ? cell(r, "岗位类型") : "";
+    var workTypeIn = WORK_TYPES.indexOf(cell(r, "工种")) >= 0 ? cell(r, "工种") : nameHint.workType;
+    var hireCountIn = (function () {
+      var s = cell(r, "入职次数");
+      if (s === "首次入职" || s === "首次") return 1;
+      var mm = s.match(/(\d+)\s*次/);
+      if (mm) return Number(mm[1]);
+      if (/^\d+$/.test(s)) return Number(s);
+      return nameHint.hireCount;
+    })();
     var fields = {
       phone: phone,
       gender: cell(r, "性别") === "男" || cell(r, "性别") === "女" ? cell(r, "性别") : "",
@@ -1074,11 +1216,25 @@ function importCsv(text) {
       lostReason: cell(r, "流失原因"),
       note: cell(r, "备注")
     };
+    if (hasJobCols) {
+      fields.jobType = jobTypeIn;
+      fields.workType = workTypeIn || (jobTypeIn === "叉车司机" ? "正式工" : "临时工");
+      fields.hireCount = hireCountIn !== null && hireCountIn >= 1 ? hireCountIn : 1;
+    }
     var matches = DB.candidates.filter(function (c) { return c.name === name; });
     var target = null;
-    if (phone) target = matches.filter(function (c) { return c.phone === phone; })[0] || null;
-    if (!target && matches.length === 1 && (!matches[0].phone || !phone)) target = matches[0];
-    if (!target && matches.length > 0) { skipped++; skipNames.push(name); continue; }
+    if (hasJobCols) {
+      // 二次入职靠入职次数区分：先在同次数的档案里按电话找；同名同电话但次数不同 = 另一次入职，不覆盖
+      var wantCount = fields.hireCount;
+      var sameCount = matches.filter(function (c) { return (c.hireCount || 1) === wantCount; });
+      if (phone) target = sameCount.filter(function (c) { return c.phone === phone; })[0] || null;
+      if (!target) target = sameCount.filter(function (c) { return !c.phone || !phone; })[0] || null;
+      if (!target && sameCount.length === 1) target = sameCount[0];
+    } else {
+      if (phone) target = matches.filter(function (c) { return c.phone === phone; })[0] || null;
+      if (!target && matches.length === 1 && (!matches[0].phone || !phone)) target = matches[0];
+      if (!target && matches.length > 0) { skipped++; skipNames.push(name); continue; }
+    }
     if (target) {
       Object.keys(fields).forEach(function (k) { target[k] = fields[k]; });
       target.createdAt = Math.min(target.createdAt || createdAt, createdAt);
@@ -1090,6 +1246,8 @@ function importCsv(text) {
       var nc = blankCandidate();
       nc.id = DB.nextId++; nc.name = name;
       Object.keys(fields).forEach(function (k) { nc[k] = fields[k]; });
+      if (WORK_TYPES.indexOf(nc.workType) < 0) nc.workType = nc.jobType === "叉车司机" ? "正式工" : "临时工";
+      if (!(Number(nc.hireCount) >= 1)) nc.hireCount = 1;
       nc.createdAt = createdAt; nc.updatedAt = updatedAt;
       DB.candidates.unshift(nc);
       // 导入的人至少到达过约面（本台账只整理约面之后），补齐漏斗所需的阶段记录
@@ -1370,7 +1528,8 @@ function hireDraft(c) {
 function profDraft(c) {
   var k = "prof-" + c.id;
   if (!UI.drafts[k]) {
-    var snap = { gender: c.gender || "", age: c.age ? String(c.age) : "", phone: c.phone || "", location: c.interviewLocation || "", note: c.note || "", hireDate: c.hireDate || "" };
+    var snap = { gender: c.gender || "", age: c.age ? String(c.age) : "", phone: c.phone || "", location: c.interviewLocation || "", note: c.note || "", hireDate: c.hireDate || "",
+      jobType: JOB_TYPES.indexOf(c.jobType) >= 0 ? c.jobType : "", workType: WORK_TYPES.indexOf(c.workType) >= 0 ? c.workType : "临时工", hireCount: Number(c.hireCount) >= 1 ? Number(c.hireCount) : 1 };
     UI.drafts[k] = { cur: Object.assign({}, snap), saved: Object.assign({}, snap), saveState: "idle", timer: null };
   }
   return UI.drafts[k];
@@ -1474,6 +1633,13 @@ function profilePanelHtml(c) {
     '<label class="lbl" style="margin-left:8px" for="age-' + c.id + '">年龄</label>' +
     '<input class="inp" style="width:80px" id="age-' + c.id + '" data-pfield="prof.age" data-cid="' + c.id + '" value="' + esc(v.age) + '" inputmode="numeric" placeholder="如 28" />' +
     '<span class="lbl">岁</span></div>' +
+    '<div><div class="lbl" style="margin-bottom:6px">岗位类型</div><div style="display:flex;flex-wrap:wrap;gap:6px">' +
+    JOB_TYPES.map(function (j) { return chipHtml("prof-job", j, j, v.jobType === j, null, c.id); }).join("") + "</div>" +
+    (v.jobType === "叉车司机" ? '<p style="font-size:12px;color:var(--dim);margin:6px 0 0">叉车司机工种默认正式工，已自动选上；不是正式工就点下面改掉。</p>' : "") + "</div>" +
+    '<div><div class="lbl" style="margin-bottom:6px">工种（没标注默认临时工）</div><div style="display:flex;flex-wrap:wrap;gap:6px">' +
+    WORK_TYPES.map(function (w) { return chipHtml("prof-work", w, w, v.workType === w, null, c.id); }).join("") + "</div></div>" +
+    '<div><div class="lbl" style="margin-bottom:6px">入职次数</div><div style="display:flex;flex-wrap:wrap;gap:6px">' +
+    [1, 2, 3].map(function (n) { return chipHtml("prof-count", String(n), n === 1 ? "首次入职" : n + "次入职", v.hireCount === n, null, c.id); }).join("") + "</div></div>" +
     '<div><label class="lbl" for="phone-' + c.id + '">联系方式（手机号 / 微信）</label>' +
     '<input class="inp" style="margin-top:4px" id="phone-' + c.id + '" data-pfield="prof.phone" data-cid="' + c.id + '" value="' + esc(v.phone) + '" inputmode="tel" placeholder="约面时他留的联系方式" /></div>' +
     '<div><label class="lbl" for="location-' + c.id + '">面试地点</label>' +
@@ -1492,7 +1658,8 @@ function profilePanelHtml(c) {
 /* 档案自动保存：改动后 700ms 落库；面板收起/重渲染前先把未落库的改动补存，不留丢失窗口 */
 function profIsDirty(d) {
   var a = d.cur, b = d.saved;
-  return a.gender !== b.gender || a.age !== b.age || a.phone !== b.phone || a.location !== b.location || a.note !== b.note || a.hireDate !== b.hireDate;
+  return a.gender !== b.gender || a.age !== b.age || a.phone !== b.phone || a.location !== b.location || a.note !== b.note || a.hireDate !== b.hireDate
+    || a.jobType !== b.jobType || a.workType !== b.workType || a.hireCount !== b.hireCount;
 }
 function profApply(id) {
   var c = findCand(id); if (!c) return;
@@ -1501,7 +1668,8 @@ function profApply(id) {
   var profFields = {
     phone: v.phone.trim(), gender: v.gender,
     age: v.age.trim() ? Number(v.age) : null,
-    interviewLocation: v.location.trim(), note: v.note.trim()
+    interviewLocation: v.location.trim(), note: v.note.trim(),
+    jobType: v.jobType, workType: v.workType, hireCount: v.hireCount
   };
   if (c.stage === "hired") profFields.hireDate = v.hireDate;
   var hireMoved = c.stage === "hired" && d.saved.hireDate !== v.hireDate;
@@ -1544,12 +1712,16 @@ function cardHeadHtml(c) {
   return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' +
     '<span style="font-weight:700;font-size:16px">' + esc(c.name) + "</span>" +
     (bits ? '<span style="font-size:12px;color:var(--dim)">' + esc(bits) + "</span>" : "") +
-    '<span class="badge" style="background:' + badge.color + '">' + badge.label + "</span></div>";
+    '<span class="badge" style="background:' + badge.color + '">' + badge.label + "</span>" +
+    (c.hireCount >= 2 ? '<span style="font-size:11px;padding:2px 8px;border-radius:999px;font-weight:500;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-soft-border)">' + c.hireCount + "次入职</span>" : "") +
+    "</div>";
 }
 function cardMetaHtml(c) {
   var t = interviewText(c);
   var h = "";
   if (c.phone) h += "<span>📞 " + esc(c.phone) + "</span>";
+  if (c.jobType) h += "<span>🧰 岗位：" + esc(c.jobType) + "</span>";
+  h += "<span>工种：" + esc(c.workType || "临时工") + "</span>";
   if (t) h += "<span>🕐 到面：" + esc(t) + "</span>";
   if (c.interviewLocation) h += "<span>📍 地点：" + esc(c.interviewLocation) + "</span>";
   if (c.stage === "hired" && c.hireDate) h += "<span>🎉 入职：" + esc(fmtHireDate(c.hireDate)) + "</span>";
@@ -1655,7 +1827,7 @@ function renderList() {
 
 /* ---------------- 新增表单 ---------------- */
 function addDraft() {
-  if (!UI.add) UI.add = { name: "", phone: "", gender: "", age: "", booked: false, date: "", slotBase: "上午", slotTime: "", location: "", note: "", hired: false, hireDate: todayShanghaiKey() };
+  if (!UI.add) UI.add = { name: "", phone: "", gender: "", age: "", jobType: "", workType: "临时工", hireCount: 1, booked: false, date: "", slotBase: "上午", slotTime: "", location: "", note: "", hired: false, hireDate: todayShanghaiKey() };
   return UI.add;
 }
 function renderAddForm() {
@@ -1669,6 +1841,13 @@ function renderAddForm() {
     chipHtml("add-gender", "男", "男", a.gender === "男") + chipHtml("add-gender", "女", "女", a.gender === "女") +
     '<label class="lbl" style="margin-left:8px" for="add-age">年龄</label>' +
     '<input class="inp" style="width:80px" id="add-age" data-afield="age" value="' + esc(a.age) + '" inputmode="numeric" placeholder="28" /><span class="lbl">岁</span></div>' +
+    '<div><div class="lbl" style="margin-bottom:6px">岗位类型</div><div style="display:flex;flex-wrap:wrap;gap:6px">' +
+    JOB_TYPES.map(function (j) { return chipHtml("add-job", j, j, a.jobType === j); }).join("") + "</div>" +
+    (a.jobType === "叉车司机" ? '<p style="font-size:12px;color:var(--dim);margin:6px 0 0">叉车司机工种默认正式工，已自动选上；不是正式工就点下面改掉。</p>' : "") + "</div>" +
+    '<div><div class="lbl" style="margin-bottom:6px">工种（没标注默认临时工）</div><div style="display:flex;flex-wrap:wrap;gap:6px">' +
+    WORK_TYPES.map(function (w) { return chipHtml("add-work", w, w, a.workType === w); }).join("") + "</div></div>" +
+    '<div><div class="lbl" style="margin-bottom:6px">入职次数</div><div style="display:flex;flex-wrap:wrap;gap:6px">' +
+    [1, 2, 3].map(function (n) { return chipHtml("add-count", String(n), n === 1 ? "首次入职" : n + "次入职", a.hireCount === n); }).join("") + "</div></div>" +
     '<div><div style="display:flex;align-items:center;gap:8px"><span class="lbl">同时约面</span>' +
     '<button type="button" role="switch" aria-checked="' + a.booked + '" aria-label="同时约面开关" class="switch' + (a.booked ? " on" : "") + '" data-act="add-toggle"><span></span></button></div>';
   if (a.booked) {
@@ -1826,6 +2005,9 @@ document.addEventListener("click", function (ev) {
     }
     /* 档案面板 */
     case "prof-gender": if (c) { var pd = profDraft(c); pd.cur.gender = pd.cur.gender === val ? "" : val; renderList(); } break;
+    case "prof-job": if (c) { var pj = profDraft(c); pj.cur.jobType = pj.cur.jobType === val ? "" : val; if (pj.cur.jobType === "叉车司机") pj.cur.workType = "正式工"; renderList(); } break;
+    case "prof-work": if (c) { profDraft(c).cur.workType = val; renderList(); } break;
+    case "prof-count": if (c) { profDraft(c).cur.hireCount = Number(val); renderList(); } break;
     case "prof-save":
       if (c) { var pd2 = profDraft(c); clearTimeout(pd2.timer); profApply(cid); }
       UI.panel = null; delete UI.drafts["prof-" + cid];
@@ -1835,6 +2017,9 @@ document.addEventListener("click", function (ev) {
     case "add-toggle": addDraft().booked = !addDraft().booked; renderAddForm(); break;
     case "add-hired-toggle": addDraft().hired = !addDraft().hired; renderAddForm(); break;
     case "add-gender": { var ad0 = addDraft(); ad0.gender = ad0.gender === val ? "" : val; renderAddForm(); break; }
+    case "add-job": { var ad1 = addDraft(); ad1.jobType = ad1.jobType === val ? "" : val; if (ad1.jobType === "叉车司机") ad1.workType = "正式工"; renderAddForm(); break; }
+    case "add-work": addDraft().workType = val; renderAddForm(); break;
+    case "add-count": addDraft().hireCount = Number(val); renderAddForm(); break;
     case "add-date": addDraft().date = val; renderAddForm(); break;
     case "add-slotbase": addDraft().slotBase = val; renderAddForm(); break;
     case "add-cancel": UI.addOpen = false; renderAddForm(); break;
@@ -1845,6 +2030,7 @@ document.addEventListener("click", function (ev) {
       var newData = {
         name: a.name.trim(), phone: a.phone.trim(), gender: a.gender,
         age: a.age.trim() ? Number(a.age) : null,
+        jobType: a.jobType, workType: a.workType, hireCount: a.hireCount,
         stage: a.hired ? "hired" : a.booked ? "booked" : "greeted",
         interviewDate: !a.hired && a.booked ? a.date : "", interviewSlot: !a.hired && a.booked ? slotA : "",
         interviewLocation: !a.hired && a.booked ? a.location.trim() : "",
@@ -2086,6 +2272,7 @@ function bindAuth() {
 
 /* ---------------- 启动 ---------------- */
 loadDB();
+migrateLedger();
 bindStatic();
 bindAuth();
 (function init() {
