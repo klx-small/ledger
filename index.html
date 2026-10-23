@@ -244,7 +244,7 @@
 
         <section id="list" aria-label="候选人名单" style="margin-top:12px"></section>
 
-        <p style="text-align:center;font-size:12px;color:var(--dim);margin-top:24px;line-height:1.8">整理口径：约面记全档案（姓名/联系方式/性别年龄/到面日期/时间段/面试地点/岗位/工种）；试岗只记结论——通过看入职意向，没过分清是本人走还是仓库判定、具体卡在哪。工种没标注默认临时工，叉车司机默认正式工；二次入职单独一份档案、标「第几次入职」，姓名保持干净。<br />看板为累计口径，今日与近7天按 Asia/Shanghai 统计；入职按档案里的入职日期归天——补录以前入职的人填真实日期，就不会算进今天。「导出表格」下载的是全部台账 CSV（21 列，含岗位类型/工种/入职次数/入职日期），Excel 可直接打开。数据只保存在这台设备的浏览器里，换设备请用「导出表格 / 导入表格」搬家，并留一份导出文件做备份。</p>
+        <p style="text-align:center;font-size:12px;color:var(--dim);margin-top:24px;line-height:1.8">整理口径：约面记全档案（姓名/联系方式/性别年龄/到面日期/时间段/面试地点/岗位/工种）；试岗只记结论——通过看入职意向，没过分清是本人走还是仓库判定、具体卡在哪。工种没标注默认临时工，叉车司机默认正式工；二次入职单独一份档案、标「第几次入职」，姓名保持干净。<br />看板为累计口径，今日与近7天按 Asia/Shanghai 统计；约面按档案里的面试日期归天——今天约了明天的面，算在明天那天；入职按档案里的入职日期归天——补录以前入职的人填真实日期，就不会算进今天。「导出表格」下载的是全部台账 CSV（21 列，含岗位类型/工种/入职次数/入职日期），Excel 可直接打开。数据只保存在这台设备的浏览器里，换设备请用「导出表格 / 导入表格」搬家，并留一份导出文件做备份。</p>
       </main>
     </div>
 
@@ -339,6 +339,27 @@ function hireDateToMs(hireDate) {
 function shanghaiDayKeyOf(ms) {
   var p = shanghaiParts(new Date(ms));
   return p.year + "-" + p.month + "-" + p.day;
+}
+/* 面试日期（档案里存的是「10月24日 周六」这类文字标签）：看板按天统计时约面以它为归属日，
+   今天约了明天的面，就落在明天那一天，不算进今天。
+   标签没带年份：在去年/今年/明年里取离今天最近的那个日期（面试都是近期排的，不会差出半年） */
+function interviewDateToMs(raw) {
+  if (!raw) return null;
+  var s = String(raw).trim();
+  if (HIRE_DATE_RE.test(s)) return hireDateToMs(s);
+  var m = s.match(/(\d{1,2})月(\d{1,2})日/);
+  if (!m) return null;
+  var mo = Number(m[1]), da = Number(m[2]);
+  if (mo < 1 || mo > 12 || da < 1 || da > 31) return null;
+  var year = Number(todayShanghaiKey().slice(0, 4));
+  var now = Date.now(), best = null, bestDiff = Infinity;
+  [year - 1, year, year + 1].forEach(function (y) {
+    var t = hireDateToMs(y + "-" + pad2(mo) + "-" + pad2(da));
+    if (t === null) return;
+    var diff = Math.abs(t - now);
+    if (diff < bestDiff) { bestDiff = diff; best = t; }
+  });
+  return best;
 }
 function todayShanghaiKey() { return shanghaiDayKeyOf(Date.now()); }
 function monthDayToKey(month, day) {
@@ -564,8 +585,12 @@ function computeDashboard() {
   // 这样补录的历史入职不会被算进「今日 / 近7天」，趋势图的点也落在真实入职那天
   var hireMsById = {};
   all.forEach(function (c) { var hm = hireDateToMs(c.hireDate); if (hm !== null) hireMsById[c.id] = hm; });
+  // 约面归属日同理以档案里的面试日期为准：今天约了明天/后天的面，booked 事件按面试那天算，
+  // 不会因为今天录入就顶进今天的约面数；没填面试日期的人仍按事件时间算
+  var bookMsById = {};
+  all.forEach(function (c) { var bm = interviewDateToMs(c.interviewDate); if (bm !== null) bookMsById[c.id] = bm; });
   var rawEv = DB.events.filter(function (e) { return liveIds[e.candidateId]; }).map(function (e) {
-    var hm = e.stage === "hired" ? hireMsById[e.candidateId] : undefined;
+    var hm = e.stage === "hired" ? hireMsById[e.candidateId] : e.stage === "booked" ? bookMsById[e.candidateId] : undefined;
     return { candidateId: e.candidateId, stage: e.stage, at: hm !== undefined ? hm : e.at };
   });
   var caps = {}, lostIds = {};
@@ -581,8 +606,9 @@ function computeDashboard() {
     rawEv.forEach(function (e) {
       if (e.candidateId === c.id && e.stage === c.stage) { if (t === null || e.at > t) t = e.at; }
     });
-    // 当前阶段是入职且有入职日期时，合成事件也钉在入职日期当天（没有 hired 事件行时同样成立）
-    var hdMs = c.stage === "hired" ? hireMsById[c.id] : undefined;
+    // 当前阶段是入职且有入职日期时，合成事件也钉在入职日期当天（没有 hired 事件行时同样成立）；
+    // 当前阶段是约面且有面试日期时同理钉在面试日期当天
+    var hdMs = c.stage === "hired" ? hireMsById[c.id] : c.stage === "booked" ? bookMsById[c.id] : undefined;
     events.push({ candidateId: c.id, stage: c.stage, at: hdMs !== undefined ? hdMs : (t === null ? c.updatedAt : t) });
   });
 
