@@ -124,6 +124,7 @@
       .switch { width: 44px; height: 24px; border-radius: 999px; position: relative; border: none; background: var(--border); flex-shrink: 0; }
       .switch span { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: left 180ms ease; }
       .switch.on { background: var(--accent); }
+      .switch.green.on { background: var(--green-solid); }
       .switch.on span { left: 22px; }
 
       .filter-row { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px; }
@@ -219,9 +220,9 @@
             <span style="font-size:11px;background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:999px;flex-shrink:0">一行一人 · 自动拆进档案</span>
           </div>
           <p style="font-size:13px;color:var(--dim);margin:6px 0 0;line-height:1.7">把一句话写全，姓名、电话、性别年龄、到面时间、面试地点、试岗结论都自动拆好，不用再逐格填表：</p>
-          <div class="quick-eg">新增 张三 男 28岁 13800138000 约面明天上午10点 地点新都园区1号门<br />更新 李四 试岗没过 仓库判定 手速太慢<br />更新 王五 试岗没过 自己提前走 太累干不动<br />更新 赵六 试岗通过 再考虑 工资想再谈谈<br />更新 钱七 试岗通过 立即入职<br />流失 孙八 嫌夜班</div>
+          <div class="quick-eg">新增 张三 男 28岁 13800138000 约面明天上午10点 地点新都园区1号门<br />更新 李四 试岗没过 仓库判定 手速太慢<br />更新 王五 试岗没过 自己提前走 太累干不动<br />更新 赵六 试岗通过 再考虑 工资想再谈谈<br />更新 钱七 试岗通过 立即入职<br />新增 刘九 男 30岁 13700002222 入职 10月15日（补录以前入职的人：写真实入职日期，就不会算进今天）<br />流失 孙八 嫌夜班</div>
           <label class="sr-only" for="quick-input">批量速记输入</label>
-          <textarea class="quick-ta" id="quick-input" rows="4" placeholder="在这里粘贴或输入，一行一人…&#10;例如：新增 周九 女 26岁 13900001111 约面后天下午2点 地点新都园区1号门"></textarea>
+          <textarea class="quick-ta" id="quick-input" rows="4" placeholder="在这里粘贴或输入，一行一人…&#10;例如：新增 周九 女 26岁 13900001111 约面后天下午2点 地点新都园区1号门&#10;补录以前入职的人：新增 刘九 13700002222 入职 10月15日"></textarea>
           <button class="btn-primary" id="quick-btn" style="margin-top:10px">一键入库并更新看板</button>
           <div id="quick-result"></div>
         </section>
@@ -243,7 +244,7 @@
 
         <section id="list" aria-label="候选人名单" style="margin-top:12px"></section>
 
-        <p style="text-align:center;font-size:12px;color:var(--dim);margin-top:24px;line-height:1.8">整理口径：约面记全档案（姓名/联系方式/性别年龄/到面日期/时间段/面试地点）；试岗只记结论——通过看入职意向，没过分清是本人走还是仓库判定、具体卡在哪。<br />看板为累计口径，今日与近7天按 Asia/Shanghai 统计；数据只保存在这台设备的浏览器里，换设备请用「导出表格 / 导入表格」搬家，并留一份导出文件做备份。</p>
+        <p style="text-align:center;font-size:12px;color:var(--dim);margin-top:24px;line-height:1.8">整理口径：约面记全档案（姓名/联系方式/性别年龄/到面日期/时间段/面试地点）；试岗只记结论——通过看入职意向，没过分清是本人走还是仓库判定、具体卡在哪。<br />看板为累计口径，今日与近7天按 Asia/Shanghai 统计；入职按档案里的入职日期归天——补录以前入职的人填真实日期，就不会算进今天。「导出表格」下载的是全部台账 CSV（含入职日期列），Excel 可直接打开。数据只保存在这台设备的浏览器里，换设备请用「导出表格 / 导入表格」搬家，并留一份导出文件做备份。</p>
       </main>
     </div>
 
@@ -323,6 +324,43 @@ function fmtFull(ms) {
   var d = new Date(ms);
   return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes());
 }
+/* 入职日期（YYYY-MM-DD，Asia/Shanghai 的日历日）：看板按天统计时以它为入职归属日，
+   补录以前入职的人填真实日期，就不会算进今天 */
+var HIRE_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+function hireDateToMs(hireDate) {
+  // 取当天中午（上海时间），避免任何日界换算把这一天算到相邻日期
+  if (!hireDate || !HIRE_DATE_RE.test(hireDate)) return null;
+  var t = new Date(hireDate + "T12:00:00+08:00").getTime();
+  return isNaN(t) ? null : t;
+}
+function shanghaiDayKeyOf(ms) {
+  var p = shanghaiParts(new Date(ms));
+  return p.year + "-" + p.month + "-" + p.day;
+}
+function todayShanghaiKey() { return shanghaiDayKeyOf(Date.now()); }
+function monthDayToKey(month, day) {
+  // 「M月D日」→ YYYY-MM-DD：按上海当年算；若算出来是将来的日子（补录去年12月入职、今年10月才录），回退一年
+  var today = todayShanghaiKey();
+  var year = Number(today.slice(0, 4));
+  var key = year + "-" + pad2(month) + "-" + pad2(day);
+  if (key > today) key = (year - 1) + "-" + pad2(month) + "-" + pad2(day);
+  return key;
+}
+function extractHireDate(text) {
+  // 从一段文字里找入职日期：支持 2025-10-15 / 2025年10月15日 / 10月15日 三种写法
+  var iso = text.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (iso) return iso[1] + "-" + pad2(Number(iso[2])) + "-" + pad2(Number(iso[3]));
+  var full = text.match(/(\d{4})年(\d{1,2})月(\d{1,2})[日号]/);
+  if (full) return full[1] + "-" + pad2(Number(full[2])) + "-" + pad2(Number(full[3]));
+  var md = text.match(/(\d{1,2})月(\d{1,2})[日号]/);
+  if (md) return monthDayToKey(Number(md[1]), Number(md[2]));
+  return "";
+}
+function fmtHireDate(iso) {
+  var m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return iso || "";
+  return m[1] + "年" + Number(m[2]) + "月" + Number(m[3]) + "日";
+}
 function csvInterviewDate(raw) {
   if (!raw) return "";
   var m = raw.match(/(\d{1,2}月\d{1,2}日)/);
@@ -362,7 +400,7 @@ function blankCandidate() {
   return {
     id: 0, name: "", phone: "", gender: "", age: null, stage: "greeted",
     lostReason: "", interviewAt: "", interviewDate: "", interviewSlot: "", interviewLocation: "",
-    trialResult: "", trialFailType: "", trialFailDetail: "", hireIntent: "", hireConcern: "",
+    trialResult: "", trialFailType: "", trialFailDetail: "", hireIntent: "", hireConcern: "", hireDate: "",
     note: "", createdAt: 0, updatedAt: 0
   };
 }
@@ -392,6 +430,15 @@ function findCand(id) {
 }
 function addEvent(candidateId, stage, atMs) {
   DB.events.push({ candidateId: candidateId, stage: stage, at: atMs || Date.now() });
+}
+/* 入职归属日变化时，把原归属日当天的阶段事件整体挪到新归属日：
+   补录的人全部事件都落在补录/旧入职日当天，一起挪才不会在旧日期残留、今日继续被顶。
+   正常推进的人早期事件不在入职日当天，不受影响。 */
+function moveEventsOnDay(candidateId, oldDayKey, newMs) {
+  if (!oldDayKey) return;
+  DB.events.forEach(function (e) {
+    if (e.candidateId === candidateId && shanghaiDayKeyOf(e.at) === oldDayKey) e.at = newMs;
+  });
 }
 function touch(c) { c.updatedAt = Date.now(); }
 
@@ -452,7 +499,14 @@ function reachedInWindow(events, caps, lostIds, startMs, endMs) {
 function computeDashboard() {
   var all = DB.candidates;
   var liveIds = {}; all.forEach(function (c) { liveIds[c.id] = true; });
-  var rawEv = DB.events.filter(function (e) { return liveIds[e.candidateId]; });
+  // 入职归属日以档案里的入职日期为准：已入职且填了入职日期的人，hired 事件一律按入职日期当天算，
+  // 这样补录的历史入职不会被算进「今日 / 近7天」，趋势图的点也落在真实入职那天
+  var hireMsById = {};
+  all.forEach(function (c) { var hm = hireDateToMs(c.hireDate); if (hm !== null) hireMsById[c.id] = hm; });
+  var rawEv = DB.events.filter(function (e) { return liveIds[e.candidateId]; }).map(function (e) {
+    var hm = e.stage === "hired" ? hireMsById[e.candidateId] : undefined;
+    return { candidateId: e.candidateId, stage: e.stage, at: hm !== undefined ? hm : e.at };
+  });
   var caps = {}, lostIds = {};
   all.forEach(function (c) {
     if (c.stage === "lost") lostIds[c.id] = true;
@@ -466,7 +520,9 @@ function computeDashboard() {
     rawEv.forEach(function (e) {
       if (e.candidateId === c.id && e.stage === c.stage) { if (t === null || e.at > t) t = e.at; }
     });
-    events.push({ candidateId: c.id, stage: c.stage, at: (t === null ? c.updatedAt : t) });
+    // 当前阶段是入职且有入职日期时，合成事件也钉在入职日期当天（没有 hired 事件行时同样成立）
+    var hdMs = c.stage === "hired" ? hireMsById[c.id] : undefined;
+    events.push({ candidateId: c.id, stage: c.stage, at: hdMs !== undefined ? hdMs : (t === null ? c.updatedAt : t) });
   });
 
   var start = shanghaiDayStartMs();
@@ -588,12 +644,30 @@ function parseQuickLine(line) {
   var ageMatch = raw.match(/(\d{2})\s*岁/);
   if (ageMatch) age = Number(ageMatch[1]);
 
+  // 入职日期先摘出来：只在「入职」附近找，并把那段日期从原文里遮住，
+  // 免得下面的到面日期解析把入职日期误当成到面日期（两种日期写法一样）
+  var hireDate = "";
+  var rawForInterview = raw;
+  var hireIdx0 = raw.indexOf("入职");
+  if (hireIdx0 >= 0) {
+    var dateRe = /(\d{4}-\d{1,2}-\d{1,2}|\d{4}年\d{1,2}月\d{1,2}[日号]|\d{1,2}月\d{1,2}[日号])/;
+    var explicitM = raw.match(new RegExp("入职日期[：:\\s]*" + dateRe.source));
+    var afterM = raw.slice(hireIdx0 + 2, hireIdx0 + 26).match(dateRe);
+    var beforeM = raw.slice(Math.max(0, hireIdx0 - 18), hireIdx0).match(dateRe);
+    var chosenHire = (explicitM && explicitM[1]) || (afterM && afterM[1]) || (beforeM && beforeM[1]) || "";
+    if (chosenHire) {
+      hireDate = extractHireDate(chosenHire);
+      var ciHire = raw.indexOf(chosenHire);
+      if (ciHire >= 0) rawForInterview = raw.slice(0, ciHire) + new Array(chosenHire.length + 1).join(" ") + raw.slice(ciHire + chosenHire.length);
+    }
+  }
+
   var interviewDate = "";
   if (raw.indexOf("后天") >= 0) interviewDate = shanghaiDateLabel(2);
   else if (raw.indexOf("明天") >= 0) interviewDate = shanghaiDateLabel(1);
   else if (raw.indexOf("今天") >= 0 || raw.indexOf("今日") >= 0) interviewDate = shanghaiDateLabel(0);
   else {
-    var md = raw.match(/(\d{1,2})月(\d{1,2})[日号]/);
+    var md = rawForInterview.match(/(\d{1,2})月(\d{1,2})[日号]/);
     if (md) interviewDate = Number(md[1]) + "月" + Number(md[2]) + "日";
   }
   var interviewSlot = "";
@@ -682,7 +756,7 @@ function parseQuickLine(line) {
     interviewAt: interviewAt, interviewDate: interviewDate, interviewSlot: interviewSlot, interviewLocation: interviewLocation,
     phone: phone, gender: gender, age: age,
     trialResult: trialResult, trialFailType: trialFailType, trialFailDetail: trialFailDetail,
-    hireIntent: hireIntent, hireConcern: hireConcern, raw: raw
+    hireIntent: hireIntent, hireConcern: hireConcern, hireDate: hireDate, raw: raw
   };
   if (!name || name.length > 10) { base.action = "unknown"; base.name = ""; return base; }
   if (stage === "lost" && action !== "create") base.action = "lost";
@@ -730,6 +804,15 @@ function quickImport(text) {
       if (p.trialResult === "failed") { fields.trialFailType = p.trialFailType; fields.trialFailDetail = p.trialFailDetail; }
       if (p.trialResult === "passed") { fields.hireIntent = p.hireIntent; if (p.hireIntent === "considering") fields.hireConcern = p.hireConcern; }
     }
+    // 入职日期：这行记到入职时才处理。明确写了日期就用它（补录按真实日期归属统计）；
+    // 没写日期则已有档案保留原日期、新档案按今天
+    var involvesHired = p.stage === "hired" || p.allStages.indexOf("hired") >= 0;
+    var hireTs = p.hireDate ? hireDateToMs(p.hireDate) : null;
+    if (involvesHired) {
+      if (p.hireDate) fields.hireDate = p.hireDate;
+      else if (!existing) fields.hireDate = todayShanghaiKey();
+      else if (!existing.hireDate) fields.hireDate = todayShanghaiKey();
+    }
     var bits = [];
     if (p.phone) bits.push("电话");
     if (p.gender || p.age) bits.push("性别年龄");
@@ -737,23 +820,38 @@ function quickImport(text) {
     if (p.interviewLocation) bits.push("地点 " + p.interviewLocation);
     if (p.trialResult === "failed") bits.push("试岗没过" + (p.trialFailType === "self_left" ? "（本人提前走" : p.trialFailType === "warehouse_reject" ? "（仓库判定" : "") + (p.trialFailDetail ? "：" + p.trialFailDetail : "") + (p.trialFailType ? "）" : ""));
     if (p.trialResult === "passed") bits.push(p.hireIntent === "immediate" ? "试岗通过·立即入职" : p.hireIntent === "considering" ? "试岗通过·再考虑" + (p.hireConcern ? "（" + p.hireConcern + "）" : "") : "试岗通过");
+    if (involvesHired && p.hireDate) bits.push("入职日期 " + p.hireDate + "（按这天统计，不算今天）");
     var summary = bits.length ? "｜" + bits.join("｜") : "";
 
+    // 补录建档：写明入职日期的整行阶段事件都钉在那天，不把历史数据算进今天
+    var evAt = involvesHired && hireTs !== null ? hireTs : undefined;
     if (p.action === "create" && !existing) {
       var nc = blankCandidate();
       nc.id = DB.nextId++; nc.name = p.name; nc.stage = p.stage; nc.lostReason = p.lostReason;
       Object.keys(fields).forEach(function (k) { nc[k] = fields[k]; });
       nc.createdAt = nc.updatedAt = Date.now();
       DB.candidates.unshift(nc);
-      p.allStages.forEach(function (s) { addEvent(nc.id, s); });
+      p.allStages.forEach(function (s) { addEvent(nc.id, s, evAt); });
       results.push({ line: line, status: "created", message: "已新增，当前：" + (STAGE_LABEL[p.stage] || p.stage) + summary }); created++;
     } else if (existing) {
+      // 已入职的人这次改了入职日期：先把旧归属日当天的旧事件整体挪到新日期，再记本次事件
+      if (involvesHired && hireTs !== null && p.hireDate !== (existing.hireDate || "")) {
+        var oldDay = existing.hireDate || "";
+        if (!oldDay && existing.stage === "hired") {
+          var latestHired = null;
+          DB.events.forEach(function (e) {
+            if (e.candidateId === existing.id && e.stage === "hired" && (latestHired === null || e.at > latestHired)) latestHired = e.at;
+          });
+          if (latestHired !== null) oldDay = shanghaiDayKeyOf(latestHired);
+        }
+        if (oldDay) moveEventsOnDay(existing.id, oldDay, hireTs);
+      }
       existing.stage = p.stage;
       Object.keys(fields).forEach(function (k) { existing[k] = fields[k]; });
       if (p.lostReason) existing.lostReason = p.lostReason;
       else if (p.stage !== "lost") existing.lostReason = "";
       touch(existing);
-      p.allStages.forEach(function (s) { addEvent(existing.id, s); });
+      p.allStages.forEach(function (s) { addEvent(existing.id, s, evAt); });
       results.push({ line: line, status: "updated", message: "已更新到：" + (STAGE_LABEL[p.stage] || p.stage) + (p.lostReason ? "（" + p.lostReason + "）" : "") + summary }); updated++;
     } else {
       var ac = blankCandidate();
@@ -761,7 +859,7 @@ function quickImport(text) {
       Object.keys(fields).forEach(function (k) { ac[k] = fields[k]; });
       ac.createdAt = ac.updatedAt = Date.now();
       DB.candidates.unshift(ac);
-      p.allStages.forEach(function (s) { addEvent(ac.id, s); });
+      p.allStages.forEach(function (s) { addEvent(ac.id, s, evAt); });
       results.push({ line: line, status: "created", message: "名单里还没有，已自动新增并设为：" + (STAGE_LABEL[p.stage] || p.stage) + summary }); created++;
     }
   });
@@ -773,10 +871,14 @@ function quickImport(text) {
 function createCandidate(data) {
   var c = blankCandidate();
   c.id = DB.nextId++;
-  Object.keys(data).forEach(function (k) { c[k] = data[k]; });
+  Object.keys(data).forEach(function (k) { if (data[k] !== undefined) c[k] = data[k]; });
+  // 补录已入职：阶段直接记入职时，入职日期缺省按今天；填了历史日期就按那天归属统计
+  if (c.stage === "hired" && !c.hireDate) c.hireDate = todayShanghaiKey();
   c.createdAt = c.updatedAt = Date.now();
   DB.candidates.unshift(c);
-  addEvent(c.id, c.stage);
+  // 直接建成已入职的人是整段历史的补录：这条阶段事件钉在入职日期当天，不算进今天
+  var htsNew = c.stage === "hired" ? hireDateToMs(c.hireDate) : null;
+  addEvent(c.id, c.stage, htsNew !== null ? htsNew : undefined);
   saveDB();
   return c;
 }
@@ -789,9 +891,19 @@ function updateStage(id, stage, opts) {
   if (opts.interviewDate !== undefined) c.interviewDate = opts.interviewDate;
   if (opts.interviewSlot !== undefined) c.interviewSlot = opts.interviewSlot;
   if (opts.interviewLocation !== undefined) c.interviewLocation = String(opts.interviewLocation).trim();
+  var eventAt;
+  if (stage === "hired") {
+    // 推进到入职：入职日期缺省按今天（已有档案里的日期优先）；补录/改期时把入职事件钉在入职日期当天
+    var hd = opts.hireDate !== undefined ? opts.hireDate : (c.hireDate || todayShanghaiKey());
+    c.hireDate = hd;
+    var hts = hireDateToMs(hd);
+    if (hts !== null) eventAt = hts;
+  } else if (opts.hireDate !== undefined) {
+    c.hireDate = opts.hireDate;
+  }
   if (stage !== "lost") c.lostReason = "";
   touch(c);
-  addEvent(id, stage);
+  addEvent(id, stage, eventAt);
   saveDB();
 }
 function recordTrialResult(id, v) {
@@ -805,21 +917,41 @@ function recordTrialResult(id, v) {
   } else {
     var intent = v.hireIntent || "";
     var nextStage = intent === "immediate" ? "hired" : "trial_passed";
+    // 立即入职：入职日期缺省按今天；明确传了日期（补录/改期）时，入职事件钉在那天，
+    // 同一次补录的试岗通过事件也一起钉过去，免得通过数还落在今天
+    var hd2 = nextStage === "hired" ? (v.hireDate || todayShanghaiKey()) : "";
+    var hts2 = nextStage === "hired" ? hireDateToMs(hd2) : null;
+    var backfillTs = nextStage === "hired" && v.hireDate ? hts2 : null;
     c.stage = nextStage; c.trialResult = "passed";
     c.trialFailType = ""; c.trialFailDetail = "";
     c.hireIntent = intent;
     c.hireConcern = intent === "considering" ? (v.hireConcern || "").trim() : "";
+    c.hireDate = hd2;
     c.lostReason = "";
     touch(c);
-    addEvent(id, "trial_passed");
-    if (nextStage === "hired") addEvent(id, "hired");
+    addEvent(id, "trial_passed", backfillTs !== null ? backfillTs : undefined);
+    if (nextStage === "hired") addEvent(id, "hired", hts2 !== null ? hts2 : undefined);
   }
   saveDB();
 }
 function updateCandidateProfile(id, fields) {
   var c = findCand(id); if (!c) return false;
+  // 改入职日期 = 改统计归属日：先记住旧归属日，落库后把那天的阶段事件整体挪到新日期
+  var moveFrom = "", moveTo = null;
+  if (fields.hireDate !== undefined && c.stage === "hired" && fields.hireDate !== (c.hireDate || "")) {
+    moveTo = hireDateToMs(fields.hireDate);
+    if (c.hireDate) moveFrom = c.hireDate;
+    else {
+      var latestH = null;
+      DB.events.forEach(function (e) {
+        if (e.candidateId === id && e.stage === "hired" && (latestH === null || e.at > latestH)) latestH = e.at;
+      });
+      if (latestH !== null) moveFrom = shanghaiDayKeyOf(latestH);
+    }
+  }
   Object.keys(fields).forEach(function (k) { if (fields[k] !== undefined) c[k] = fields[k]; });
   touch(c);
+  if (moveFrom && moveTo !== null) moveEventsOnDay(id, moveFrom, moveTo);
   saveDB();
   return true;
 }
@@ -846,8 +978,8 @@ function filteredCandidates() {
   return rows;
 }
 
-/* ---------------- 导出 / 导入表格（17 列，与台账版导出格式一致） ---------------- */
-var CSV_HEADER = ["姓名", "联系方式", "性别", "年龄", "当前阶段", "到面日期", "到面时间段", "面试地点", "试岗结果", "试岗没过归因", "试岗没过具体问题", "入职意向", "入职顾虑", "流失原因", "备注", "录入时间", "更新时间"];
+/* ---------------- 导出 / 导入表格（18 列，与台账版导出格式一致，含入职日期） ---------------- */
+var CSV_HEADER = ["姓名", "联系方式", "性别", "年龄", "当前阶段", "入职日期", "到面日期", "到面时间段", "面试地点", "试岗结果", "试岗没过归因", "试岗没过具体问题", "入职意向", "入职顾虑", "流失原因", "备注", "录入时间", "更新时间"];
 function downloadCsv() {
   var rows = sortedCandidates();
   if (!rows.length) { toast("台账是空的，还没有可导出的数据"); return; }
@@ -856,6 +988,7 @@ function downloadCsv() {
     return [
       c.name, c.phone, c.gender, c.age == null ? "" : c.age,
       (c.stage === "greeted" || c.stage === "wechat") ? "待约面" : (stageMap[c.stage] ? stageMap[c.stage].label : c.stage),
+      c.hireDate || "",
       csvInterviewDate(c.interviewDate), c.interviewSlot, c.interviewLocation,
       c.trialResult === "passed" ? "通过" : c.trialResult === "failed" ? "没过" : "",
       c.trialFailType === "self_left" ? "本人提前走" : c.trialFailType === "warehouse_reject" ? "仓库判定不通过" : "",
@@ -930,6 +1063,7 @@ function importCsv(text) {
       gender: cell(r, "性别") === "男" || cell(r, "性别") === "女" ? cell(r, "性别") : "",
       age: (function () { var n = parseInt(cell(r, "年龄"), 10); return isNaN(n) ? null : n; })(),
       stage: stage,
+      hireDate: (function () { var hd = cell(r, "入职日期"); return HIRE_DATE_RE.test(hd) ? hd : ""; })(),
       interviewDate: cell(r, "到面日期"), interviewSlot: cell(r, "到面时间段"), interviewLocation: cell(r, "面试地点"),
       interviewAt: [cell(r, "到面日期"), cell(r, "到面时间段")].filter(Boolean).join(" "),
       trialResult: cell(r, "试岗结果") === "通过" ? "passed" : cell(r, "试岗结果") === "没过" ? "failed" : "",
@@ -976,7 +1110,7 @@ function importCsv(text) {
 /* ---------------- UI 状态 ---------------- */
 var UI = {
   filter: "all", search: "", trendDays: 7,
-  panel: null,          // {id, kind: 'stages'|'book'|'trial'|'profile'}
+  panel: null,          // {id, kind: 'stages'|'book'|'trial'|'profile'|'hire'}
   lostFor: null, deleteConfirm: null,
   addOpen: false,
   add: null,            // 新增表单草稿
@@ -1225,13 +1359,18 @@ function bookDraft(c) {
 }
 function trialDraft(c) {
   var k = "trial-" + c.id;
-  if (!UI.drafts[k]) UI.drafts[k] = { result: "", failType: "", failDetail: "", failCustom: "", hireIntent: "", hireConcern: "", hireCustom: "" };
+  if (!UI.drafts[k]) UI.drafts[k] = { result: "", failType: "", failDetail: "", failCustom: "", hireIntent: "", hireConcern: "", hireCustom: "", hireDate: c.hireDate || todayShanghaiKey() };
+  return UI.drafts[k];
+}
+function hireDraft(c) {
+  var k = "hire-" + c.id;
+  if (!UI.drafts[k]) UI.drafts[k] = { hireDate: c.hireDate || todayShanghaiKey() };
   return UI.drafts[k];
 }
 function profDraft(c) {
   var k = "prof-" + c.id;
   if (!UI.drafts[k]) {
-    var snap = { gender: c.gender || "", age: c.age ? String(c.age) : "", phone: c.phone || "", location: c.interviewLocation || "", note: c.note || "" };
+    var snap = { gender: c.gender || "", age: c.age ? String(c.age) : "", phone: c.phone || "", location: c.interviewLocation || "", note: c.note || "", hireDate: c.hireDate || "" };
     UI.drafts[k] = { cur: Object.assign({}, snap), saved: Object.assign({}, snap), saveState: "idle", timer: null };
   }
   return UI.drafts[k];
@@ -1285,6 +1424,11 @@ function trialPanelHtml(c) {
       chipHtml("trial-hire", "immediate", "立即办理入职", d.hireIntent === "immediate", "green", c.id) +
       chipHtml("trial-hire", "considering", "再考虑一下", d.hireIntent === "considering", null, c.id) +
       "</div></div>";
+    if (d.hireIntent === "immediate") {
+      h += '<div><div class="panel-title" style="font-weight:500">入职日期（补录以前入职的就改成真实那天，今天的数字不会被顶上去）</div>' +
+        '<label class="sr-only" for="trial-hire-date-' + c.id + '">入职日期</label>' +
+        '<input class="inp" style="width:auto" type="date" id="trial-hire-date-' + c.id + '" data-pfield="trial.hireDate" data-cid="' + c.id + '" value="' + esc(d.hireDate) + '" /></div>';
+    }
     if (d.hireIntent === "considering") {
       h += '<div><div class="panel-title">他的顾虑点是？</div><div style="display:flex;flex-wrap:wrap;gap:6px">' +
         HIRE_CONCERNS.map(function (x) { return chipHtml("trial-concern", x, x, d.hireConcern === x, null, c.id); }).join("") + "</div>" +
@@ -1297,6 +1441,21 @@ function trialPanelHtml(c) {
   if (d.result === "passed" && d.hireIntent === "immediate") h += '<p style="font-size:12px;color:var(--dim);margin:0">保存后直接记为已入职。</p>';
   if (d.result === "passed" && d.hireIntent === "considering") h += '<p style="font-size:12px;color:var(--dim);margin:0">保存后留在「试岗通过」，会出现在上方待跟进里，提醒你再推一把。</p>';
   return h + "</div>";
+}
+/* 入职面板：确认入职并选入职日期。补录以前入职的人时把日期改成真实那天，
+   看板的今日/近7天/趋势图都按这个日期算，今天不会被顶上去。 */
+function hirePanelHtml(c) {
+  var d = hireDraft(c);
+  var isToday = d.hireDate === todayShanghaiKey();
+  return '<div class="panel panel-in">' +
+    '<div class="panel-title" style="font-weight:600">他是哪天入职的？</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">' +
+    chipHtml("hire-today", "", "今天入职", isToday, "green", c.id) +
+    '<label class="sr-only" for="hire-date-' + c.id + '">入职日期</label>' +
+    '<input class="inp" style="width:auto" type="date" id="hire-date-' + c.id + '" data-pfield="hire.hireDate" data-cid="' + c.id + '" value="' + esc(d.hireDate) + '" /></div>' +
+    '<p style="font-size:12px;color:var(--dim);margin:0;line-height:1.7">补录以前入职的人，就把日期改成他真实入职那天：累计入职照样 +1，但不会算进今天，趋势图上的点也会落在那一天。</p>' +
+    '<button type="button" class="btn-primary" style="background:var(--green-solid)" data-act="hire-confirm" data-cid="' + c.id + '"' + (!d.hireDate ? " disabled" : "") + ">确认入职：" + esc(fmtHireDate(d.hireDate)) + "</button>" +
+    "</div>";
 }
 function profStatusText(st) {
   if (st === "dirty") return "有修改，正在自动保存…";
@@ -1319,6 +1478,11 @@ function profilePanelHtml(c) {
     '<input class="inp" style="margin-top:4px" id="phone-' + c.id + '" data-pfield="prof.phone" data-cid="' + c.id + '" value="' + esc(v.phone) + '" inputmode="tel" placeholder="约面时他留的联系方式" /></div>' +
     '<div><label class="lbl" for="location-' + c.id + '">面试地点</label>' +
     '<input class="inp" style="margin-top:4px" id="location-' + c.id + '" data-pfield="prof.location" data-cid="' + c.id + '" value="' + esc(v.location) + '" placeholder="具体地点 如 京东物流新都园区1号门" /></div>' +
+    (c.stage === "hired"
+      ? '<div><label class="lbl" for="hire-date-profile-' + c.id + '">入职日期</label>' +
+        '<input class="inp" style="margin-top:4px" type="date" id="hire-date-profile-' + c.id + '" data-pfield="prof.hireDate" data-cid="' + c.id + '" value="' + esc(v.hireDate) + '" />' +
+        '<p style="font-size:12px;color:var(--dim);margin:4px 0 0;line-height:1.6">看板的今日 / 近7天 / 趋势图都按这个日期算入职；补录填错了，改这里就能把统计挪到正确的那天。</p></div>'
+      : "") +
     '<div><label class="lbl" for="note-' + c.id + '">备注</label>' +
     '<input class="inp" style="margin-top:4px" id="note-' + c.id + '" data-pfield="prof.note" data-cid="' + c.id + '" value="' + esc(v.note) + '" placeholder="住大丰 / 做过分拣 / 要长白班…" /></div>' +
     '<p id="prof-status-' + c.id + '" aria-live="polite" style="font-size:12px;margin:0;color:' + (d.saveState === "error" ? "var(--red)" : d.saveState === "saved" ? "var(--green)" : "var(--dim)") + '">' + profStatusText(d.saveState) + "</p>" +
@@ -1328,21 +1492,30 @@ function profilePanelHtml(c) {
 /* 档案自动保存：改动后 700ms 落库；面板收起/重渲染前先把未落库的改动补存，不留丢失窗口 */
 function profIsDirty(d) {
   var a = d.cur, b = d.saved;
-  return a.gender !== b.gender || a.age !== b.age || a.phone !== b.phone || a.location !== b.location || a.note !== b.note;
+  return a.gender !== b.gender || a.age !== b.age || a.phone !== b.phone || a.location !== b.location || a.note !== b.note || a.hireDate !== b.hireDate;
 }
 function profApply(id) {
   var c = findCand(id); if (!c) return;
   var d = profDraft(c); if (!profIsDirty(d)) return;
   var v = d.cur;
-  updateCandidateProfile(id, {
+  var profFields = {
     phone: v.phone.trim(), gender: v.gender,
     age: v.age.trim() ? Number(v.age) : null,
     interviewLocation: v.location.trim(), note: v.note.trim()
-  });
+  };
+  if (c.stage === "hired") profFields.hireDate = v.hireDate;
+  var hireMoved = c.stage === "hired" && d.saved.hireDate !== v.hireDate;
+  updateCandidateProfile(id, profFields);
   d.saved = Object.assign({}, v);
   d.saveState = "saved";
   patchCardHead(c);
-  renderFollowups(computeDashboard());
+  if (hireMoved) {
+    // 入职日期变了 = 统计归属日变了，看板数字要跟着整体迁移
+    var dashNow = computeDashboard();
+    renderHeader(dashNow); renderDash(dashNow); renderFollowups(dashNow);
+  } else {
+    renderFollowups(computeDashboard());
+  }
   var st = document.getElementById("prof-status-" + id);
   if (st) { st.textContent = profStatusText("saved"); st.style.color = "var(--green)"; }
 }
@@ -1379,6 +1552,7 @@ function cardMetaHtml(c) {
   if (c.phone) h += "<span>📞 " + esc(c.phone) + "</span>";
   if (t) h += "<span>🕐 到面：" + esc(t) + "</span>";
   if (c.interviewLocation) h += "<span>📍 地点：" + esc(c.interviewLocation) + "</span>";
+  if (c.stage === "hired" && c.hireDate) h += "<span>🎉 入职：" + esc(fmtHireDate(c.hireDate)) + "</span>";
   return h;
 }
 function patchCardHead(c) {
@@ -1435,6 +1609,7 @@ function candidateCardHtml(c) {
   h += "</div>";
 
   if (openKind === "book") h += bookPanelHtml(c);
+  if (openKind === "hire") h += hirePanelHtml(c);
   if (openKind === "trial") h += trialPanelHtml(c);
   if (openKind === "profile") h += profilePanelHtml(c);
 
@@ -1480,7 +1655,7 @@ function renderList() {
 
 /* ---------------- 新增表单 ---------------- */
 function addDraft() {
-  if (!UI.add) UI.add = { name: "", phone: "", gender: "", age: "", booked: false, date: "", slotBase: "上午", slotTime: "", location: "", note: "" };
+  if (!UI.add) UI.add = { name: "", phone: "", gender: "", age: "", booked: false, date: "", slotBase: "上午", slotTime: "", location: "", note: "", hired: false, hireDate: todayShanghaiKey() };
   return UI.add;
 }
 function renderAddForm() {
@@ -1512,6 +1687,14 @@ function renderAddForm() {
       '<input class="inp" style="margin-top:4px" id="add-location" data-afield="location" value="' + esc(a.location) + '" placeholder="具体地点 如 京东物流新都园区1号门" /></div></div>';
   }
   h += '</div>' +
+    '<div><div style="display:flex;align-items:center;gap:8px"><span class="lbl">补录已入职（以前就入职的人）</span>' +
+    '<button type="button" role="switch" aria-checked="' + a.hired + '" aria-label="补录已入职开关" class="switch green' + (a.hired ? " on" : "") + '" data-act="add-hired-toggle"><span></span></button></div>';
+  if (a.hired) {
+    h += '<div style="margin-top:8px"><label class="lbl" for="add-hire-date">入职日期（他真实入职的那天）</label>' +
+      '<input class="inp inp-lg" style="margin-top:4px" type="date" id="add-hire-date" data-afield="hireDate" value="' + esc(a.hireDate) + '" />' +
+      '<p style="font-size:12px;color:var(--dim);margin:4px 0 0;line-height:1.6">累计入职会 +1，但不会算进今天；近7天和趋势图也按这个日期算。打开这个开关时，上面的「同时约面」不生效。</p></div>';
+  }
+  h += '</div>' +
     '<div><label class="lbl" for="add-note">备注（可选）</label><input class="inp inp-lg" style="margin-top:4px" id="add-note" data-afield="note" value="' + esc(a.note) + '" placeholder="住大丰 / 有经验…" /></div>' +
     '<div style="display:flex;gap:8px"><button type="button" class="btn-primary" style="flex:1;width:auto" data-act="add-save"' + (!a.name.trim() ? " disabled" : "") + '>保存</button>' +
     '<button type="button" class="btn-ghost" style="border-radius:12px;padding:10px 16px" data-act="add-cancel">取消</button></div></div>';
@@ -1533,6 +1716,7 @@ function openPanel(id, kind) {
   if (c) {
     if (kind === "book") delete UI.drafts["book-" + id];
     if (kind === "trial") delete UI.drafts["trial-" + id];
+    if (kind === "hire") delete UI.drafts["hire-" + id];
     if (kind === "profile") delete UI.drafts["prof-" + id];
   }
   UI.panel = { id: id, kind: kind };
@@ -1568,6 +1752,7 @@ document.addEventListener("click", function (ev) {
       var nk = NEXT[c.stage];
       if (nk === "booked") { openPanel(cid, "book"); renderList(); }
       else if (nk === "trial_passed") { openPanel(cid, "trial"); renderList(); }
+      else if (nk === "hired") { openPanel(cid, "hire"); renderList(); }
       else if (nk) { updateStage(cid, nk, {}); renderAll(); }
       break;
     }
@@ -1581,6 +1766,7 @@ document.addEventListener("click", function (ev) {
       break;
     case "set-stage":
       if (val === "lost") { UI.lostFor = cid; renderList(); }
+      else if (val === "hired") { openPanel(cid, "hire"); renderList(); }
       else { updateStage(cid, val, {}); UI.panel = null; renderAll(); }
       break;
     case "del-ask": UI.deleteConfirm = cid; renderList(); break;
@@ -1588,7 +1774,7 @@ document.addEventListener("click", function (ev) {
     case "del-yes":
       deleteCandidate(cid);
       UI.deleteConfirm = null; UI.panel = null;
-      delete UI.drafts["book-" + cid]; delete UI.drafts["trial-" + cid]; delete UI.drafts["prof-" + cid];
+      delete UI.drafts["book-" + cid]; delete UI.drafts["trial-" + cid]; delete UI.drafts["hire-" + cid]; delete UI.drafts["prof-" + cid];
       renderAll(); toast("已删除，相关统计记录一并清除");
       break;
     /* 约面面板 */
@@ -1606,6 +1792,17 @@ document.addEventListener("click", function (ev) {
       UI.panel = null; renderAll(); toast("已约面：" + bd.date + " " + slot);
       break;
     }
+    /* 入职面板 */
+    case "hire-today": if (c) { hireDraft(c).hireDate = todayShanghaiKey(); renderList(); } break;
+    case "hire-confirm": {
+      if (!c) break;
+      var hd3 = hireDraft(c);
+      if (!hd3.hireDate) break;
+      updateStage(cid, "hired", { hireDate: hd3.hireDate });
+      delete UI.drafts["hire-" + cid];
+      UI.panel = null; renderAll(); toast("已入职：" + fmtHireDate(hd3.hireDate));
+      break;
+    }
     /* 试岗面板 */
     case "trial-result": if (c) { trialDraft(c).result = val; renderList(); } break;
     case "trial-failtype": if (c) { var td0 = trialDraft(c); td0.failType = val; td0.failDetail = ""; renderList(); } break;
@@ -1620,7 +1817,8 @@ document.addEventListener("click", function (ev) {
         failType: td.result === "failed" ? td.failType : undefined,
         failDetail: td.result === "failed" ? (td.failCustom.trim() || td.failDetail) : undefined,
         hireIntent: td.result === "passed" ? td.hireIntent : undefined,
-        hireConcern: td.result === "passed" && td.hireIntent === "considering" ? (td.hireCustom.trim() || td.hireConcern) : undefined
+        hireConcern: td.result === "passed" && td.hireIntent === "considering" ? (td.hireCustom.trim() || td.hireConcern) : undefined,
+        hireDate: td.result === "passed" && td.hireIntent === "immediate" && td.hireDate ? td.hireDate : undefined
       });
       delete UI.drafts["trial-" + cid];
       UI.panel = null; renderAll(); toast("试岗结果已保存");
@@ -1635,6 +1833,7 @@ document.addEventListener("click", function (ev) {
       break;
     /* 新增表单 */
     case "add-toggle": addDraft().booked = !addDraft().booked; renderAddForm(); break;
+    case "add-hired-toggle": addDraft().hired = !addDraft().hired; renderAddForm(); break;
     case "add-gender": { var ad0 = addDraft(); ad0.gender = ad0.gender === val ? "" : val; renderAddForm(); break; }
     case "add-date": addDraft().date = val; renderAddForm(); break;
     case "add-slotbase": addDraft().slotBase = val; renderAddForm(); break;
@@ -1643,15 +1842,17 @@ document.addEventListener("click", function (ev) {
       var a = addDraft();
       if (!a.name.trim()) break;
       var slotA = a.slotBase + (a.slotTime.trim() ? " " + a.slotTime.trim() : "");
-      createCandidate({
+      var newData = {
         name: a.name.trim(), phone: a.phone.trim(), gender: a.gender,
         age: a.age.trim() ? Number(a.age) : null,
-        stage: a.booked ? "booked" : "greeted",
-        interviewDate: a.booked ? a.date : "", interviewSlot: a.booked ? slotA : "",
-        interviewLocation: a.booked ? a.location.trim() : "",
-        interviewAt: a.booked ? [a.date, slotA].filter(Boolean).join(" ") : "",
+        stage: a.hired ? "hired" : a.booked ? "booked" : "greeted",
+        interviewDate: !a.hired && a.booked ? a.date : "", interviewSlot: !a.hired && a.booked ? slotA : "",
+        interviewLocation: !a.hired && a.booked ? a.location.trim() : "",
+        interviewAt: !a.hired && a.booked ? [a.date, slotA].filter(Boolean).join(" ") : "",
         note: a.note.trim()
-      });
+      };
+      if (a.hired && a.hireDate) newData.hireDate = a.hireDate;
+      createCandidate(newData);
       toast("已新增 " + a.name.trim());
       UI.add = null; UI.addOpen = false;
       renderAll();
@@ -1679,6 +1880,19 @@ document.addEventListener("input", function (ev) {
       }
     } else if (parts[0] === "trial") {
       trialDraft(c)[parts[1]] = el.value;
+    } else if (parts[0] === "hire") {
+      hireDraft(c)[parts[1]] = el.value;
+      var hbtn = document.querySelector('[data-act="hire-confirm"][data-cid="' + cid + '"]');
+      if (hbtn) {
+        hbtn.disabled = !el.value;
+        hbtn.textContent = "确认入职：" + fmtHireDate(el.value);
+      }
+      var hchip = document.querySelector('[data-act="hire-today"][data-cid="' + cid + '"]');
+      if (hchip) {
+        var isT = el.value === todayShanghaiKey();
+        hchip.className = "chip" + (isT ? " on green" : "");
+        hchip.setAttribute("aria-pressed", isT ? "true" : "false");
+      }
     } else if (parts[0] === "prof") {
       var pd = profDraft(c);
       pd.cur[parts[1]] = parts[1] === "age" ? el.value.replace(/[^\d]/g, "") : el.value;
